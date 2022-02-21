@@ -1,0 +1,107 @@
+#include "midi_controller.h"
+
+#include "utils.h"
+
+MidiController::MidiController()
+    : timerManager(), midiTones{0}, midiFrequency{0} {
+  // precompute the midi to frequency calculation
+  double a = 440;  // a is 440 hz
+  for (int i = 0; i < 128; i++) {
+    midiFrequency[i] = a * pow(2., ((double)i - 69) / 12);
+    // Serial.print(i);
+    // Serial.print(" ");
+    // Serial.println(midiFrequency[i]);
+  }
+}
+
+MidiController::~MidiController() {
+  // nothing to do here
+}
+
+bool MidiController::processMessage(char* msg) {
+  debugprintln((int)msg[0]);
+  if ((msg[0] & 0xf0) == 0x90) {
+    if (msg[2] == 0) {
+      Serial.println("note on with velocity zero");
+      noteOff(msg);
+    } else {
+      Serial.println("note on");
+      noteOn(msg);
+    }
+  } else if ((msg[0] & 0xf0) == 0x80) {
+    Serial.println("note off");
+    noteOff(msg);
+  } else if (msg[0] == 0xff) {
+    Serial.println("exit cmd");
+    // the ending command, exit midi mode
+    return false;
+  } else {
+    Serial.println("unknown cmd");
+  }
+  return true;
+}
+
+void MidiController::noteOn(char* msg) {
+  // try to fetch a timer from TimerManager first
+  CoilTimer* timer = timerManager.getTimer();
+  if (!timer) {
+    return;
+  }
+  // see if there is a MidiTone available to use for this note
+  for (int i = 0; i < TimerManager::NUM_TIMERS; i++) {
+    if (!midiTones[i].used) {
+      midiTones[i].used = true;
+      midiTones[i].channel = msg[0] & 0xf;
+      midiTones[i].note = msg[1];
+      midiTones[i].velocity = msg[2];
+      midiTones[i].delay = (uint16_t)msg[3] << 8 | (uint16_t)msg[4];
+      debugprint("delay: ");
+      debugprintln(midiTones[i].delay);
+      midiTones[i].coilTimer = timer;
+      midiTones[i].coilTimer->setFrequency(midiFrequency[midiTones[i].note]);
+      midiTones[i].coilTimer->start();
+      return;
+    }
+  }
+}
+
+void MidiController::noteOff(char* msg) {
+  // find the note that should be stopped
+  for (int i = 0; i < TimerManager::NUM_TIMERS; i++) {
+    if (midiTones[i].used && midiTones[i].channel == (msg[0] & 0xf) &&
+        midiTones[i].note == msg[1]) {
+      // found the node, now stop the timer and release the MidiTone
+      debugprint("delay: ");
+      debugprintln(midiTones[i].delay);
+      midiTones[i].coilTimer->stop();
+      timerManager.releaseTimer(midiTones[i].coilTimer);
+      midiTones[i].used = false;
+      return;
+    }
+  }
+  Serial.println("note not found!");
+  for (int i = 0; i < TimerManager::NUM_TIMERS; i++) {
+    debugprint(i);
+    debugprint(": ");
+    debugprint(midiTones[i].used);
+    debugprint(", ");
+    debugprint(midiTones[i].channel);
+    debugprint(", ");
+    debugprintln(midiTones[i].note);
+  }
+  debugprint(midiTones[4].used);
+  debugprint(" ");
+  debugprint(midiTones[4].channel);
+  debugprint(" == ");
+  debugprint(msg[0] & 0xf);
+  debugprint("; ");
+  debugprint(midiTones[4].note);
+  debugprint(" == ");
+  debugprint(msg[1]);
+  debugprint("; ");
+  debugprint(midiTones[4].note == msg[1]);
+  debugprint(" with cast: ");
+  debugprint(midiTones[4].note == (uint8_t)msg[1]);
+  debugprint("; ");
+  debugprintln(midiTones[4].channel == (msg[0] & 0xf));
+}
