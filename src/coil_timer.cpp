@@ -110,6 +110,7 @@ void CoilTimer::createSpark(uint16_t numActiveTimers) {
   // base the active timer volume adjustment on the frequency
   double volAdjuctedFac =
       1. + (activeTimerFac - 1);  // * (onTimes[0]) / (onTime);
+  volAdjuctedFac = 1.5;
   duration = (uint16_t)((double)duration / volAdjuctedFac);
   // reduce duration by velocity if velocity is low
   duration *= (127 + _velocity / 2);

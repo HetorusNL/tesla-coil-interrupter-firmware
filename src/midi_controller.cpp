@@ -2,17 +2,9 @@
 
 #include "utils.h"
 
-MidiController::MidiController()
-    : timerManager(), midiTones{0}, midiFrequency{0} {
-  // precompute the midi to frequency calculation
-  double a = 440;  // a is 440 hz
-  for (int i = 0; i < 128; i++) {
-    midiFrequency[i] = a * pow(2., ((double)i - 69) / 12);
-    // Serial.print(i);
-    // Serial.print(" ");
-    // Serial.println(midiFrequency[i]);
-  }
-}
+constexpr float MidiController::midiFrequency[];
+
+MidiController::MidiController() : timerManager(), midiTones{0} {}
 
 MidiController::~MidiController() {
   // nothing to do here
