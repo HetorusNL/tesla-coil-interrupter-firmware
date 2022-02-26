@@ -20,6 +20,7 @@ class TimerManager {
 
   CoilTimer* getTimer();
   void releaseTimer(CoilTimer* timer);
+  void releaseAllTimers();
 
  private:
   inline static uint16_t getNumActiveTimers() {
@@ -45,7 +46,7 @@ class TimerManager {
   static CoilTimer* timers[];
 
  private:
-  static bool timersAvailable[];
+  static bool timersInUse[];
 };
 
 #endif  // TimerManager_h

@@ -12,6 +12,9 @@ CoilTimer::~CoilTimer() {
 
 void CoilTimer::start() {
   active = true;
+  // set the priority of the timer interrupt to 1 (0 is default and highest
+  // priority) so it doesn't disturb the UART interrupt!!
+  NVIC_SetPriority(hwTimer->irq, 1);
   NVIC_ClearPendingIRQ(hwTimer->irq);
   NVIC_EnableIRQ(hwTimer->irq);
   TC_Start(hwTimer->tc, hwTimer->channel);

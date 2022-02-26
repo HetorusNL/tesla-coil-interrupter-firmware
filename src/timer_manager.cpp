@@ -1,7 +1,7 @@
 #include "timer_manager.h"
 
 CoilTimer* TimerManager::timers[NUM_TIMERS] = {0};
-bool TimerManager::timersAvailable[NUM_TIMERS] = {0};
+bool TimerManager::timersInUse[NUM_TIMERS] = {0};
 
 TimerManager::TimerManager() {
   // create the timer objects
@@ -21,8 +21,8 @@ TimerManager::~TimerManager() {
 // get the first available timer, returns nullptr if all timers are occupied
 CoilTimer* TimerManager::getTimer() {
   for (int i = 0; i < NUM_TIMERS; i++) {
-    if (!timersAvailable[i]) {
-      timersAvailable[i] = true;
+    if (!timersInUse[i]) {
+      timersInUse[i] = true;
       return timers[i];
     }
   }
@@ -35,7 +35,17 @@ void TimerManager::releaseTimer(CoilTimer* timer) {
   for (int i = 0; i < NUM_TIMERS; i++) {
     if (timers[i] == timer) {
       timer->stop();
-      timersAvailable[i] = false;
+      timersInUse[i] = false;
+    }
+  }
+}
+
+// release all timers so they can be used for other purposes
+void TimerManager::releaseAllTimers() {
+  for (int i = 0; i < NUM_TIMERS; i++) {
+    if (timersInUse[i]) {
+      timers[i]->stop();
+      timersInUse[i] = false;
     }
   }
 }

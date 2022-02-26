@@ -1,6 +1,7 @@
 #ifndef MidiController_h
 #define MidiController_h
 
+#include "packet_handler_constants.h"
 #include "timer_manager.h"
 
 class MidiController {
@@ -8,12 +9,17 @@ class MidiController {
   MidiController();
   ~MidiController();
 
+  // packet handler functions
+  PHC::PACKET_HANDLE_RESULT StartStream(uint8_t* data, uint8_t len);
+  PHC::PACKET_HANDLE_RESULT HandleMessage(uint8_t* data, uint8_t len);
+  PHC::PACKET_HANDLE_RESULT EndStream(uint8_t* data, uint8_t len);
+
   // processes a 3-char midi message
-  bool processMessage(char* msg);
+  bool processMessage(uint8_t* msg);
 
  private:
-  void noteOn(char* msg);
-  void noteOff(char* msg);
+  void noteOn(uint8_t* msg);
+  void noteOff(uint8_t* msg);
 
  private:
   TimerManager timerManager;

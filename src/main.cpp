@@ -1,6 +1,7 @@
 #include <Arduino.h>
 
 #include "midi_controller.h"
+#include "packet_handler.h"
 #include "timer_manager.h"
 #include "utils.h"
 
@@ -9,6 +10,7 @@ MidiController* midiController = nullptr;
 TimerManager* timerManager = nullptr;
 CoilTimer* firstTimer = nullptr;
 CoilTimer* testTimer = nullptr;
+PacketHandler* packetHandler = nullptr;
 
 void setup() {
   pinMode(LED_BUILTIN, OUTPUT);
@@ -19,6 +21,7 @@ void setup() {
     digitalWrite(LED_BUILTIN, LOW);
     delay(100);
   }
+  packetHandler = new PacketHandler();
   Serial.begin(115200);
   timerManager = new TimerManager();
   midiController = new MidiController();
@@ -35,6 +38,8 @@ uint32_t freq = 0;
 bool midiMode = false;
 
 void loop() {
+  packetHandler->Update();
+  return;
   if (Serial.available()) {
     char c = Serial.read();
     if (c == 'm') {
@@ -51,7 +56,7 @@ void loop() {
           debugprint(" ");
         }
         debugprintln();
-        if (!midiController->processMessage(midiMsg)) {
+        if (!midiController->processMessage((uint8_t*)midiMsg)) {
           // if above returned false, exit from midi mode
           midiMode = false;
         }
