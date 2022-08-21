@@ -36,7 +36,7 @@ void PacketHandler::Update() {
     case LOC_SEQ:
       if (c != sequenceNumber) {
         // sequence number mismatch, send back NACK and expected sequence number
-        SendReply(c, sequenceNumber);
+        SendReply(NACK, sequenceNumber);
         messageIndex = LOC_STX;
         return;
       }
@@ -50,7 +50,7 @@ void PacketHandler::Update() {
       if (messageIndex == (ETX_OFFSET + buffer[LOC_LEN])) {
         if (c != ETX) {
           // invalid message received, as ETX is not in the correct location
-          SendReply(messageIndex, sequenceNumber);
+          SendReply(NACK, sequenceNumber);
           messageIndex = LOC_STX;
           return;
         }
@@ -100,7 +100,7 @@ void PacketHandler::HandleResult(PHC::PACKET_HANDLE_RESULT result) {
       SendReply(ACK, sequenceNumber);
       break;
     case PHC::PACKET_HANDLE_RESULT::RESULT_NOK:
-      SendReply(103, sequenceNumber);
+      SendReply(NACK, sequenceNumber);
       break;
     case PHC::PACKET_HANDLE_RESULT::RESULT_WAIT:
       packetWaiting = true;
