@@ -11,12 +11,13 @@ class PacketHandler {
  public:
   PacketHandler();
   ~PacketHandler();
-  void Update();
+  void update();
 
  private:
-  void SendReply(uint8_t result, uint8_t sequenceNum);
-  void HandlePacket();
-  void HandleResult(PHC::PACKET_HANDLE_RESULT result);
+  void sendReply(uint8_t result, uint8_t sequenceNum);
+  void handlePacket();
+  void handleResult(PHC::PACKET_HANDLE_RESULT result);
+  PHC::PACKET_HANDLE_RESULT performReset();
 
  private:
   // control values
@@ -35,6 +36,7 @@ class PacketHandler {
   static constexpr uint8_t TYPE_MIDI_START = 0x01;  // start of MIDI stream
   static constexpr uint8_t TYPE_MIDI_MSG = 0x02;  // MIDI message stream message
   static constexpr uint8_t TYPE_MIDI_END = 0x03;  // end of MIDI message stream
+  static constexpr uint8_t TYPE_RESET = 0xff;     // perform reset sequence
   // constants
   static constexpr uint8_t MAX_MSG_SIZE = 0x10;
 

@@ -1,5 +1,6 @@
 #include "midi_controller.h"
 
+#include "packet_handler.h"
 #include "utils.h"
 
 using PACKET_HANDLE_RESULT = PHC::PACKET_HANDLE_RESULT;
@@ -12,26 +13,33 @@ MidiController::~MidiController() {
   // nothing to do here
 }
 
-PACKET_HANDLE_RESULT MidiController::StartStream(uint8_t* data, uint8_t len) {
+PACKET_HANDLE_RESULT MidiController::startStream(uint8_t* data, uint8_t len) {
   // release the timers before starting the MIDI playback
   timerManager.releaseAllTimers();
   return PACKET_HANDLE_RESULT::RESULT_OK;
 }
 
-PACKET_HANDLE_RESULT MidiController::HandleMessage(uint8_t* data, uint8_t len) {
+PACKET_HANDLE_RESULT MidiController::handleMessage(uint8_t* data, uint8_t len) {
   // TODO add queueing functionality here
   processMessage(data);
   return PACKET_HANDLE_RESULT::RESULT_OK;
 }
 
-PACKET_HANDLE_RESULT MidiController::EndStream(uint8_t* data, uint8_t len) {
+PACKET_HANDLE_RESULT MidiController::endStream(uint8_t* data, uint8_t len) {
   // release the timers to make sure all sounds are stopped
   timerManager.releaseAllTimers();
   return PACKET_HANDLE_RESULT::RESULT_OK;
 }
 
+PACKET_HANDLE_RESULT MidiController::performReset() {
+  // release the timers to make sure all sounds are stopped
+  timerManager.releaseAllTimers();
+  stopAllNotes();
+  return PACKET_HANDLE_RESULT::RESULT_OK;
+}
+
 bool MidiController::processMessage(uint8_t* msg) {
-  debugprintln((int)msg[0]);
+  debugprint((int)msg[0]);
   if ((msg[0] & 0xf0) == 0x90) {
     if (msg[2] == 0) {
       //   Serial.println("note on with velocity zero");
@@ -68,7 +76,7 @@ void MidiController::noteOn(uint8_t* msg) {
       midiTones[i].velocity = msg[2];
       midiTones[i].delay = (uint16_t)msg[3] << 8 | (uint16_t)msg[4];
       debugprint("delay: ");
-      debugprintln(midiTones[i].delay);
+      debugprint(midiTones[i].delay);
       midiTones[i].coilTimer = timer;
       midiTones[i].coilTimer->setFrequency(midiFrequency[midiTones[i].note]);
       midiTones[i].coilTimer->start();
@@ -84,7 +92,7 @@ void MidiController::noteOff(uint8_t* msg) {
         midiTones[i].note == msg[1]) {
       // found the node, now stop the timer and release the MidiTone
       debugprint("delay: ");
-      debugprintln(midiTones[i].delay);
+      debugprint(midiTones[i].delay);
       midiTones[i].coilTimer->stop();
       timerManager.releaseTimer(midiTones[i].coilTimer);
       midiTones[i].used = false;
@@ -99,7 +107,7 @@ void MidiController::noteOff(uint8_t* msg) {
     debugprint(", ");
     debugprint(midiTones[i].channel);
     debugprint(", ");
-    debugprintln(midiTones[i].note);
+    debugprint(midiTones[i].note);
   }
   debugprint(midiTones[4].used);
   debugprint(" ");
@@ -115,5 +123,15 @@ void MidiController::noteOff(uint8_t* msg) {
   debugprint(" with cast: ");
   debugprint(midiTones[4].note == (uint8_t)msg[1]);
   debugprint("; ");
-  debugprintln(midiTones[4].channel == (msg[0] & 0xf));
+  debugprint(midiTones[4].channel == (msg[0] & 0xf));
+}
+
+void MidiController::stopAllNotes() {
+  for (int i = 0; i < TimerManager::NUM_TIMERS; i++) {
+    if (midiTones[i].used) {
+      midiTones[i].coilTimer->stop();
+      timerManager.releaseTimer(midiTones[i].coilTimer);
+      midiTones[i].used = false;
+    }
+  }
 }

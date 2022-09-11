@@ -10,9 +10,10 @@ class MidiController {
   ~MidiController();
 
   // packet handler functions
-  PHC::PACKET_HANDLE_RESULT StartStream(uint8_t* data, uint8_t len);
-  PHC::PACKET_HANDLE_RESULT HandleMessage(uint8_t* data, uint8_t len);
-  PHC::PACKET_HANDLE_RESULT EndStream(uint8_t* data, uint8_t len);
+  PHC::PACKET_HANDLE_RESULT startStream(uint8_t* data, uint8_t len);
+  PHC::PACKET_HANDLE_RESULT handleMessage(uint8_t* data, uint8_t len);
+  PHC::PACKET_HANDLE_RESULT endStream(uint8_t* data, uint8_t len);
+  PHC::PACKET_HANDLE_RESULT performReset();
 
   // processes a 3-char midi message
   bool processMessage(uint8_t* msg);
@@ -20,6 +21,7 @@ class MidiController {
  private:
   void noteOn(uint8_t* msg);
   void noteOff(uint8_t* msg);
+  void stopAllNotes();
 
  private:
   TimerManager timerManager;

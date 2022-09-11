@@ -38,7 +38,7 @@ uint32_t freq = 0;
 bool midiMode = false;
 
 void loop() {
-  packetHandler->Update();
+  packetHandler->update();
   return;
   if (Serial.available()) {
     char c = Serial.read();
@@ -55,7 +55,6 @@ void loop() {
           debugprint((int)midiMsg[i]);
           debugprint(" ");
         }
-        debugprintln();
         if (!midiController->processMessage((uint8_t*)midiMsg)) {
           // if above returned false, exit from midi mode
           midiMode = false;

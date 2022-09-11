@@ -50,6 +50,12 @@ void TimerManager::releaseAllTimers() {
   }
 }
 
+PHC::PACKET_HANDLE_RESULT TimerManager::performReset() {
+  // reset this manager by releasing all timers
+  releaseAllTimers();
+  return PHC::PACKET_HANDLE_RESULT::RESULT_OK;
+}
+
 void TC0_Handler() {
   TC_GetStatus(TC0, 0);
   TimerManager::timers[0]->createSpark(TimerManager::getNumActiveTimers());

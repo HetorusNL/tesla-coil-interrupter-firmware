@@ -1,5 +1,7 @@
 #include "packet_handler.h"
 
+#include "utils.h"
+
 PacketHandler::PacketHandler()
     : midiController(nullptr),
       timerManager(nullptr),
@@ -19,10 +21,10 @@ PacketHandler::~PacketHandler() {
   // nothing to do here
 }
 
-void PacketHandler::Update() {
+void PacketHandler::update() {
   // if we're waiting for a packet to be handled, retry the packet until OK/NOK
   if (packetWaiting) {
-    HandlePacket();
+    handlePacket();
     return;
   }
   // if we're not waiting for a packet to be handled, monitor serial connection
@@ -36,7 +38,7 @@ void PacketHandler::Update() {
     case LOC_SEQ:
       if (c != sequenceNumber) {
         // sequence number mismatch, send back NACK and expected sequence number
-        SendReply(NACK, sequenceNumber);
+        sendReply(NACK, sequenceNumber);
         messageIndex = LOC_STX;
         return;
       }
@@ -50,13 +52,13 @@ void PacketHandler::Update() {
       if (messageIndex == (ETX_OFFSET + buffer[LOC_LEN])) {
         if (c != ETX) {
           // invalid message received, as ETX is not in the correct location
-          SendReply(NACK, sequenceNumber);
+          sendReply(NACK, sequenceNumber);
           messageIndex = LOC_STX;
           return;
         }
         // add the ETX to the buffer and handle it
         buffer[messageIndex] = c;
-        HandlePacket();
+        handlePacket();
         messageIndex = LOC_STX;
         return;
       }
@@ -66,7 +68,7 @@ void PacketHandler::Update() {
   messageIndex++;
 }
 
-void PacketHandler::SendReply(uint8_t result, uint8_t sequenceNum) {
+void PacketHandler::sendReply(uint8_t result, uint8_t sequenceNum) {
   uint8_t reply[] = {STX, result, sequenceNum, ETX};
   Serial.write(reply, sizeof(reply));
   if (result != ACK) {
@@ -76,31 +78,36 @@ void PacketHandler::SendReply(uint8_t result, uint8_t sequenceNum) {
   }
 }
 
-void PacketHandler::HandlePacket() {
+void PacketHandler::handlePacket() {
   uint8_t* data = &buffer[LOC_DATA];
   uint8_t len = buffer[LOC_LEN];
+  debugprint("handle message: ");
+  debugprint(buffer[LOC_TYPE]);
   switch (buffer[LOC_TYPE]) {
     case TYPE_MIDI_START:
-      HandleResult(midiController->StartStream(data, len));
+      handleResult(midiController->startStream(data, len));
       break;
     case TYPE_MIDI_MSG:
-      HandleResult(midiController->HandleMessage(data, len));
+      handleResult(midiController->handleMessage(data, len));
       break;
     case TYPE_MIDI_END:
-      HandleResult(midiController->EndStream(data, len));
+      handleResult(midiController->endStream(data, len));
+      break;
+    case TYPE_RESET:
+      handleResult(performReset());
       break;
     default:
       break;  // invalid packet received!
   }
 }
 
-void PacketHandler::HandleResult(PHC::PACKET_HANDLE_RESULT result) {
+void PacketHandler::handleResult(PHC::PACKET_HANDLE_RESULT result) {
   switch (result) {
     case PHC::PACKET_HANDLE_RESULT::RESULT_OK:
-      SendReply(ACK, sequenceNumber);
+      sendReply(ACK, sequenceNumber);
       break;
     case PHC::PACKET_HANDLE_RESULT::RESULT_NOK:
-      SendReply(NACK, sequenceNumber);
+      sendReply(NACK, sequenceNumber);
       break;
     case PHC::PACKET_HANDLE_RESULT::RESULT_WAIT:
       packetWaiting = true;
@@ -109,4 +116,12 @@ void PacketHandler::HandleResult(PHC::PACKET_HANDLE_RESULT result) {
   sequenceNumber++;
   packetWaiting = false;
   memset(buffer, 0, sizeof(buffer));
+}
+
+PHC::PACKET_HANDLE_RESULT PacketHandler::performReset() {
+  using PHR = PHC::PACKET_HANDLE_RESULT;
+  bool result = true;
+  result &= midiController->performReset() == PHR::RESULT_OK;
+  result &= timerManager->performReset() == PHR::RESULT_OK;
+  return result ? PHR::RESULT_OK : PHR::RESULT_NOK;
 }

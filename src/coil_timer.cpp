@@ -11,6 +11,7 @@ CoilTimer::~CoilTimer() {
 }
 
 void CoilTimer::start() {
+  if (isActive()) return;
   active = true;
   // set the priority of the timer interrupt to 1 (0 is default and highest
   // priority) so it doesn't disturb the UART interrupt!!
@@ -21,6 +22,7 @@ void CoilTimer::start() {
 }
 
 void CoilTimer::stop() {
+  if (!isActive()) return;
   active = false;
   NVIC_DisableIRQ(hwTimer->irq);
   TC_Stop(hwTimer->tc, hwTimer->channel);
@@ -65,43 +67,6 @@ void CoilTimer::getClock(double& frequency, uint32_t& rc) {
   float ticks = (float)SystemCoreClock / frequency / clockConfig[0].divisor;
   rc = (uint32_t)round(ticks);
   frequency = (double)SystemCoreClock / clockConfig[0].divisor / (double)rc;
-}
-
-// pick the best clock
-// Timer		Definition
-// TIMER_CLOCK1	MCK /  2
-// TIMER_CLOCK2	MCK /  8
-// TIMER_CLOCK3	MCK / 32
-// TIMER_CLOCK4	MCK /128
-uint8_t CoilTimer::bestClock(double& frequency, uint32_t& rc) {
-  float ticks;
-  float error;
-  int clkId = 0;
-  int bestClock = 3;
-  float bestTicks = UINT32_MAX;
-  float bestError = 9.999e99;
-  do {
-    ticks =
-        (float)SystemCoreClock / frequency / (float)clockConfig[clkId].divisor;
-    // error comparison needs scaling
-    error = clockConfig[clkId].divisor * abs(ticks - round(ticks));
-    if (error < bestError) {
-      bestClock = clkId;
-      bestError = error;
-      bestTicks = ticks;
-    }
-    Serial.print("divisor: ");
-    Serial.print(clockConfig[clkId].divisor);
-    Serial.print(" ticks: ");
-    Serial.print(ticks);
-    Serial.print(" error: ");
-    Serial.println(error);
-  } while (clkId++ < 3);
-  // update the rc value with the ticks and calculate actual frequency
-  rc = (uint32_t)round(bestTicks);
-  frequency =
-      (double)SystemCoreClock / clockConfig[bestClock].divisor / (double)rc;
-  return clockConfig[bestClock].flag;
 }
 
 void CoilTimer::createSpark(uint16_t numActiveTimers) {

@@ -28,7 +28,6 @@ class CoilTimer {
 
  private:
   void getClock(double& frequency, uint32_t& rc);
-  uint8_t bestClock(double& frequency, uint32_t& rc);
   inline byte getOnTime() {
     // make sure that the type of the array is a single byte, or change sizeof
     uint16_t index = (uint16_t)_frequency / 100;

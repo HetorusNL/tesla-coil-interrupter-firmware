@@ -2,6 +2,7 @@
 #define TimerManager_h
 
 #include "coil_timer.h"
+#include "packet_handler_constants.h"
 
 class TimerManager {
  public:
@@ -21,6 +22,7 @@ class TimerManager {
   CoilTimer* getTimer();
   void releaseTimer(CoilTimer* timer);
   void releaseAllTimers();
+  PHC::PACKET_HANDLE_RESULT performReset();
 
  private:
   inline static uint16_t getNumActiveTimers() {
