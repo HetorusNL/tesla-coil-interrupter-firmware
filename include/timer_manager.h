@@ -4,51 +4,60 @@
 #include "coil_timer.h"
 #include "packet_handler_constants.h"
 
+void timerISR0();
+void timerISR1();
+void timerISR2();
+void timerISR3();
+void timerISR4();
+void timerISR5();
+void timerISR6();
+void timerISR7();
+void timerISR8();
+
 class TimerManager {
- public:
-  static constexpr int NUM_TIMERS = 9;
+public:
+    static constexpr int NUM_TIMERS = 9;
 
- private:
-  CoilTimer::HwTimer hwTimers[NUM_TIMERS] = {
-      {TC0, 0, TC0_IRQn}, {TC0, 1, TC1_IRQn}, {TC0, 2, TC2_IRQn},
-      {TC1, 0, TC3_IRQn}, {TC1, 1, TC4_IRQn}, {TC1, 2, TC5_IRQn},
-      {TC2, 0, TC6_IRQn}, {TC2, 1, TC7_IRQn}, {TC2, 2, TC8_IRQn},
-  };
+private:
+    CoilTimer::HwTimer hwTimers[NUM_TIMERS] = {
+        {TIM1, timerISR0}, {TIM2, timerISR1}, {TIM3, timerISR2}, {TIM4, timerISR3},  {TIM5, timerISR4},
+        {TIM6, timerISR5}, {TIM7, timerISR6}, {TIM8, timerISR7}, {TIM12, timerISR8},
+    };
 
- public:
-  TimerManager();
-  ~TimerManager();
+public:
+    TimerManager();
+    ~TimerManager();
 
-  CoilTimer* getTimer();
-  void releaseTimer(CoilTimer* timer);
-  void releaseAllTimers();
-  PHC::PACKET_HANDLE_RESULT performReset();
+    CoilTimer* getTimer();
+    void releaseTimer(CoilTimer* timer);
+    void releaseAllTimers();
+    PHC::PACKET_HANDLE_RESULT performReset();
 
- private:
-  inline static uint16_t getNumActiveTimers() {
-    uint16_t res = 0;
-    for (int i = 0; i < NUM_TIMERS; i++) {
-      res += timers[i]->isActive();
+private:
+    inline static uint16_t getNumActiveTimers() {
+        uint16_t res = 0;
+        for (int i = 0; i < NUM_TIMERS; i++) {
+            res += timers[i]->isActive();
+        }
+        return res;
     }
-    return res;
-  }
 
- protected:
-  // make the interrupt handler friends, so they can use internal callbacks
-  friend void TC0_Handler(void);
-  friend void TC1_Handler(void);
-  friend void TC2_Handler(void);
-  friend void TC3_Handler(void);
-  friend void TC4_Handler(void);
-  friend void TC5_Handler(void);
-  friend void TC6_Handler(void);
-  friend void TC7_Handler(void);
-  friend void TC8_Handler(void);
+protected:
+    // make the interrupt handler friends, so they can use internal callbacks
+    friend void timerISR0(void);
+    friend void timerISR1(void);
+    friend void timerISR2(void);
+    friend void timerISR3(void);
+    friend void timerISR4(void);
+    friend void timerISR5(void);
+    friend void timerISR6(void);
+    friend void timerISR7(void);
+    friend void timerISR8(void);
 
-  static CoilTimer* timers[];
+    static CoilTimer* timers[];
 
- private:
-  static bool timersInUse[];
+private:
+    static bool timersInUse[];
 };
 
 #endif  // TimerManager_h
