@@ -1,5 +1,4 @@
-#ifndef PacketHandler_h
-#define PacketHandler_h
+#pragma once
 
 #include <Arduino.h>
 
@@ -11,13 +10,14 @@ class PacketHandler {
 public:
     PacketHandler();
     ~PacketHandler();
+
     void update();
 
 private:
-    void sendReply(uint8_t result, uint8_t sequenceNum);
-    void handlePacket();
-    void handleResult(PHC::PACKET_HANDLE_RESULT result);
-    PHC::PACKET_HANDLE_RESULT performReset();
+    void send_reply(uint8_t result, uint8_t sequence_num);
+    void handle_packet();
+    void handle_result(PHC::PACKET_HANDLE_RESULT result);
+    PHC::PACKET_HANDLE_RESULT perform_reset();
 
 private:
     // control values
@@ -41,13 +41,11 @@ private:
     static constexpr uint8_t MAX_MSG_SIZE = 0x10;
 
 private:
-    MidiController* midiController;
-    TimerManager* timerManager;
+    MidiController midi_controller;
+    TimerManager timer_manager;
 
     uint8_t buffer[MAX_MSG_SIZE];
-    uint8_t messageIndex;
-    uint8_t sequenceNumber;
-    bool packetWaiting;
+    uint8_t message_index;
+    uint8_t sequence_number;
+    bool packet_waiting;
 };
-
-#endif  // PacketHandler_h

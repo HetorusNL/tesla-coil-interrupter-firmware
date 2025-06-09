@@ -1,44 +1,43 @@
-#ifndef MidiController_h
-#define MidiController_h
+#pragma once
 
 #include "packet_handler_constants.h"
 #include "timer_manager.h"
 
 class MidiController {
 public:
-    MidiController();
+    MidiController(TimerManager& timer_manager);
     ~MidiController();
 
     // packet handler functions
-    PHC::PACKET_HANDLE_RESULT startStream(uint8_t* data, uint8_t len);
-    PHC::PACKET_HANDLE_RESULT handleMessage(uint8_t* data, uint8_t len);
-    PHC::PACKET_HANDLE_RESULT endStream(uint8_t* data, uint8_t len);
-    PHC::PACKET_HANDLE_RESULT performReset();
+    PHC::PACKET_HANDLE_RESULT start_stream(uint8_t* data, uint8_t len);
+    PHC::PACKET_HANDLE_RESULT handle_message(uint8_t* data, uint8_t len);
+    PHC::PACKET_HANDLE_RESULT end_stream(uint8_t* data, uint8_t len);
+    PHC::PACKET_HANDLE_RESULT perform_reset();
 
     // processes a 3-char midi message
-    bool processMessage(uint8_t* msg);
+    bool process_message(uint8_t* msg);
 
 private:
-    void noteOn(uint8_t* msg);
-    void noteOff(uint8_t* msg);
-    void stopAllNotes();
+    void note_on(uint8_t* msg);
+    void note_off(uint8_t* msg);
+    void stop_all_notes();
 
 private:
-    TimerManager timerManager;
+    TimerManager& timer_manager;
     struct MidiTone {
         bool used;
         uint8_t channel;
         uint8_t note;
         uint8_t velocity;
         uint16_t delay;
-        CoilTimer* coilTimer;
+        CoilTimer* coil_timer;
     };
-    MidiTone midiTones[TimerManager::NUM_TIMERS];
+    MidiTone midi_tones[TimerManager::NUM_TIMERS];
 
     // precomputed MIDI frequencies
-    // calculation, where rootNote = 440Hz, note = MIDI note:
-    // rootNote * pow(2., ((double)note - 69) / 12)
-    static constexpr float midiFrequency[] = {
+    // calculation, where root_note = 440Hz, note = MIDI note:
+    // root_note * pow(2., ((double)note - 69) / 12)
+    static constexpr float midi_frequency[] = {
         8.175798916, 8.661957218, 9.177023997, 9.722718241, 10.30086115, 10.91338223, 11.56232571, 12.24985737,
         12.9782718,  13.75,       14.56761755, 15.43385316, 16.35159783, 17.32391444, 18.35404799, 19.44543648,
         20.60172231, 21.82676446, 23.12465142, 24.49971475, 25.9565436,  27.5,        29.13523509, 30.86770633,
@@ -56,5 +55,3 @@ private:
         5274.040911, 5587.651703, 5919.910763, 6271.926976, 6644.875161, 7040,        7458.620184, 7902.13282,
         8372.01809,  8869.844191, 9397.272573, 9956.063479, 10548.08182, 11175.30341, 11839.82153, 12543.85395};
 };
-
-#endif  // MidiController_h

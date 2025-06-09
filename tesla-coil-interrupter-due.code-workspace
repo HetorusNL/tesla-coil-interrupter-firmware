@@ -5,6 +5,8 @@
     }
   ],
   "settings": {
+    "files.insertFinalNewline": true,
+    "files.trimFinalNewlines": true,
     "files.associations": {
       "cmath": "cpp"
     }

@@ -1,12 +1,12 @@
 #include "timer_manager.h"
 
 CoilTimer* TimerManager::timers[NUM_TIMERS] = {0};
-bool TimerManager::timersInUse[NUM_TIMERS] = {0};
+bool TimerManager::timer_in_use[NUM_TIMERS] = {0};
 
 TimerManager::TimerManager() {
     // create the timer objects
     for (int i = 0; i < NUM_TIMERS; i++) {
-        timers[i] = new CoilTimer(i, &hwTimers[i]);
+        timers[i] = new CoilTimer(i, &timer_config[i]);
     }
 
     // Give USART3 (Serial) the highest priority
@@ -33,10 +33,10 @@ TimerManager::~TimerManager() {
 }
 
 // get the first available timer, returns nullptr if all timers are occupied
-CoilTimer* TimerManager::getTimer() {
+CoilTimer* TimerManager::get_timer() {
     for (int i = 0; i < NUM_TIMERS; i++) {
-        if (!timersInUse[i]) {
-            timersInUse[i] = true;
+        if (!timer_in_use[i]) {
+            timer_in_use[i] = true;
             return timers[i];
         }
     }
@@ -45,36 +45,27 @@ CoilTimer* TimerManager::getTimer() {
 }
 
 // make sure that the timer is stopped and release the timer for future use
-void TimerManager::releaseTimer(CoilTimer* timer) {
+void TimerManager::release_timer(CoilTimer* timer) {
     for (int i = 0; i < NUM_TIMERS; i++) {
         if (timers[i] == timer) {
             timer->stop();
-            timersInUse[i] = false;
+            timer_in_use[i] = false;
         }
     }
 }
 
 // release all timers so they can be used for other purposes
-void TimerManager::releaseAllTimers() {
+void TimerManager::release_all_timers() {
     for (int i = 0; i < NUM_TIMERS; i++) {
-        if (timersInUse[i]) {
+        if (timer_in_use[i]) {
             timers[i]->stop();
-            timersInUse[i] = false;
+            timer_in_use[i] = false;
         }
     }
 }
 
-PHC::PACKET_HANDLE_RESULT TimerManager::performReset() {
+PHC::PACKET_HANDLE_RESULT TimerManager::perform_reset() {
     // reset this manager by releasing all timers
-    releaseAllTimers();
+    release_all_timers();
     return PHC::PACKET_HANDLE_RESULT::RESULT_OK;
 }
-void timerISR0() { TimerManager::timers[0]->createSpark(TimerManager::getNumActiveTimers()); }
-void timerISR1() { TimerManager::timers[1]->createSpark(TimerManager::getNumActiveTimers()); }
-void timerISR2() { TimerManager::timers[2]->createSpark(TimerManager::getNumActiveTimers()); }
-void timerISR3() { TimerManager::timers[3]->createSpark(TimerManager::getNumActiveTimers()); }
-void timerISR4() { TimerManager::timers[4]->createSpark(TimerManager::getNumActiveTimers()); }
-void timerISR5() { TimerManager::timers[5]->createSpark(TimerManager::getNumActiveTimers()); }
-void timerISR6() { TimerManager::timers[6]->createSpark(TimerManager::getNumActiveTimers()); }
-void timerISR7() { TimerManager::timers[7]->createSpark(TimerManager::getNumActiveTimers()); }
-void timerISR8() { TimerManager::timers[8]->createSpark(TimerManager::getNumActiveTimers()); }

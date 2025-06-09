@@ -1,5 +1,4 @@
-#ifndef PacketHandlerConstants_h
-#define PacketHandlerConstants_h
+#pragma once
 
 namespace PHC {
 // return values for packet handler calls
@@ -9,5 +8,3 @@ enum class PACKET_HANDLE_RESULT {
     RESULT_WAIT,  // packet not yet handled, will be retried later, send nothing
 };
 }  // namespace PHC
-
-#endif  // PackethandlerConstants_h
