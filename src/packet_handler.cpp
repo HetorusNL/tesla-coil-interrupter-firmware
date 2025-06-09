@@ -37,6 +37,7 @@ void PacketHandler::update() {
             // sequence number mismatch, send back NACK and expected sequence number
             send_reply(NACK, sequence_number);
             message_index = LOC_STX;
+            digitalWrite(LED_RED, true);
             return;
         }
         break;
@@ -51,6 +52,7 @@ void PacketHandler::update() {
                 // invalid message received, as ETX is not in the correct location
                 send_reply(NACK, sequence_number);
                 message_index = LOC_STX;
+                digitalWrite(LED_RED, true);
                 return;
             }
             // add the ETX to the buffer and handle it

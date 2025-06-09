@@ -9,13 +9,20 @@ PacketHandler* packet_handler = nullptr;
 
 void setup() {
     pinMode(LED_BUILTIN, OUTPUT);
+    pinMode(LED_BLUE, OUTPUT);
+    pinMode(LED_GREEN, OUTPUT);  // same as LED_BUILTIN
+    pinMode(LED_RED, OUTPUT);
     pinMode(COIL_PIN, OUTPUT);
-    for (int i = 0; i < 5; i++) {
-        digitalWrite(LED_BUILTIN, HIGH);
-        delay(100);
-        digitalWrite(LED_BUILTIN, LOW);
-        delay(100);
-    }
+    // flash the LEDS to show we're starting
+    digitalWrite(LED_RED, HIGH);
+    delay(100);
+    digitalWrite(LED_GREEN, HIGH);
+    digitalWrite(LED_RED, LOW);
+    delay(100);
+    digitalWrite(LED_BLUE, HIGH);
+    digitalWrite(LED_GREEN, LOW);
+    delay(100);
+    digitalWrite(LED_BLUE, LOW);
     // ensure the I/O is setup before initializing the packet handler
     packet_handler = new PacketHandler();
 }

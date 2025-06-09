@@ -3,9 +3,14 @@
 #include <HardwareTimer.h>
 
 CoilTimer::CoilTimer(int id, Config* config)
-    : id(id), config(config), _frequency(1), _velocity(0), active(false), spark_enabled(true) {
+    : id(id), config(config), _frequency(1), _velocity(0), active(false), spark_enabled(true), in_use(false) {
+    // create the hardware timer with the timer typedef
     hardware_timer = new HardwareTimer(config->type_def);
-    // configure the hardware_timer for the default frequency of 1 (Hz)
+
+    // set the interrupt priority to lower than the serial connection
+    NVIC_SetPriority(config->irq_type, 5);  // TIM1
+
+    // configure the hardware_timer for a default frequency of 1 (Hz)
     set_frequency(_frequency);
 }
 
@@ -96,7 +101,7 @@ void CoilTimer::create_spark(uint16_t num_active_timers) {
     // base the active hardware_timer volume adjustment on the frequency
     double vol_adjusted_factor = 1. + (active_timer_factor - 1);  // * (on_time[0]) / (on_time);
     vol_adjusted_factor = 1.5;
-    duration = (uint16_t)((double)duration / vol_adjusted_factor);
+    duration = (uint16_t)((double)duration * VOLUME_MULTIPLIER / vol_adjusted_factor);
     // reduce duration by velocity if velocity is low
     duration *= (127 + _velocity / 2);
     duration >>= 8;
@@ -112,6 +117,22 @@ void CoilTimer::create_spark(uint16_t num_active_timers) {
     digitalWrite(LED_BUILTIN, LOW);
     digitalWrite(COIL_PIN, LOW);
     delayMicroseconds(duration);
+}
+
+bool CoilTimer::request() {
+    // if already in use, we can't request this timer
+    if (in_use)
+        return false;
+
+    // otherwise set the timer to be in_use and return true
+    in_use = true;
+    return true;
+}
+
+void CoilTimer::release() {
+    // stop the timer and set to not being in use
+    stop();
+    in_use = false;
 }
 
 void CoilTimer::isr() {

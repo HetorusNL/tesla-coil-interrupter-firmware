@@ -24,10 +24,11 @@ public:
 
     inline double get_frequency() { return _frequency; }
     inline bool is_active() { return active; }
-
-    void isr();
+    bool request();
+    void release();
 
 private:
+    void isr();
     inline uint8_t get_on_time() {
         // make sure that the type of the array is a single uint8_t, or change sizeof
         uint16_t index = (uint16_t)_frequency / 100;
@@ -51,8 +52,10 @@ private:
     uint8_t _velocity;
     bool active;
     bool spark_enabled;
+    bool in_use;
 
+    static constexpr double VOLUME_MULTIPLIER = 0.25;
     static constexpr int MIN_ON_TIME = 10;
     static constexpr int MAX_ON_TIME = 100;
-    const uint8_t on_times[20] = {193, 133, 98, 84, 74, 63, 55, 50, 45, 42, 38, 34, 30, 27, 24, 22, 20, 18, 17, 16};
+    const uint8_t on_times[20] = {80, 75, 70, 66, 62, 59, 57, 56, 55, 54, 53, 52, 51, 50, 50, 50, 50, 50, 50, 50};
 };

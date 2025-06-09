@@ -43,7 +43,4 @@ protected:
     friend class CoilTimer;
 
     static CoilTimer* timers[];
-
-private:
-    static bool timer_in_use[];
 };
